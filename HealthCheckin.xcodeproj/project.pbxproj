@@ -10,9 +10,22 @@
 		A259364E2E6E55CD00C62261 /* HealthCheckin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthCheckin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A225319D2E6E5B2000C9333F /* Exceptions for "HealthCheckin" folder in "HealthCheckin" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A259364D2E6E55CD00C62261 /* HealthCheckin */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A25936502E6E55CD00C62261 /* HealthCheckin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A225319D2E6E5B2000C9333F /* Exceptions for "HealthCheckin" folder in "HealthCheckin" target */,
+			);
 			path = HealthCheckin;
 			sourceTree = "<group>";
 		};
@@ -251,11 +264,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HealthCheckin/HealthCheckin.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = M4HJ937772;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HealthCheckin/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Reads HRV, resting heart rate, sleep, respiratory rate, wrist temperature, steps, energy and workouts to create a daily summary just for me.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -279,11 +295,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HealthCheckin/HealthCheckin.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = M4HJ937772;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HealthCheckin/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Reads HRV, resting heart rate, sleep, respiratory rate, wrist temperature, steps, energy and workouts to create a daily summary just for me.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>HealthCheckin reads your Health data (sleep, HRV, resting heart rate, respiratory rate, wrist temperature, steps, active energy, VO2Max, workouts) to generate a private on-device daily report. It does not write any data.</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict/>
+	</array>
+</dict>
+</plist>
