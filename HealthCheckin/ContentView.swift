@@ -33,10 +33,28 @@ struct Metric: Codable {
     let quality: [String]
 }
 
-struct Activity: Codable {
+struct ActivityDay: Codable {
     let steps: Int?
     let activeEnergyKcal: Double?
+    let distanceWalkingRunningMeters: Double?
+    let distanceCyclingMeters: Double?
+    let distanceSwimmingMeters: Double?
+    let flightsClimbed: Double?
+    let basalEnergyKcal: Double?
+    let standMinutes: Double?
+    let standHours: Int?
+    let avgHeartRateBpm: Double?
+    let maxHeartRateBpm: Double?
+    let vo2Max: Double?
+    let exerciseMinutes: Double?
     let workouts: [Workout]
+    let heartRateBpm: [HRPoint]?
+    let hrZonesSec: [String: Double]?
+}
+
+struct Activity: Codable {
+    let yesterday: ActivityDay
+    let today: ActivityDay
 }
 
 struct Workout: Codable {
@@ -46,6 +64,38 @@ struct Workout: Codable {
     let durationMin: Double
     let averageHeartRate: Double?
     let maxHeartRate: Double?
+    let totalDistanceMeters: Double?
+    let activeEnergyKcal: Double?
+    let avgSpeedMetersPerSec: Double?
+    let routeSegments: Int?
+    let effortScore: Double?
+    let estimatedEffortScore: Double?
+}
+
+struct HealthDay: Codable {
+    let mindfulMinutes: Double?
+    let dietaryEnergyKcal: Double?
+    let dietaryWaterLiters: Double?
+    let dietaryCarbohydratesGrams: Double?
+    let dietaryProteinGrams: Double?
+    let dietaryFatGrams: Double?
+    let dietaryCaffeineMg: Double?
+    let dietarySodiumMg: Double?
+    let dietaryAlcoholGrams: Double?
+    let bloodGlucoseMgPerdL: Double?
+    let bloodPressureSystolicMmHg: Double?
+    let bloodPressureDiastolicMmHg: Double?
+    let oxygenSaturationAvgPct: Double?
+    let bodyTemperatureC: Double?
+    let bodyMassKg: Double?
+    let bodyMassIndex: Double?
+    let bodyFatPercent: Double?
+    let ecgCount: Int?
+}
+
+struct Health: Codable {
+    let yesterday: HealthDay
+    let today: HealthDay
 }
 
 struct ReportV1: Codable {
@@ -53,7 +103,13 @@ struct ReportV1: Codable {
     let windows: ReportWindows
     let readinessSignals: [String: Metric]
     let activity: Activity
+    let health: Health
     let flags: [String: Bool]
+}
+
+struct HRPoint: Codable {
+	let time: Date
+	let bpm: Double
 }
 
 // MARK: - Storage (simple JSON cache)
@@ -121,7 +177,45 @@ final class HealthKitManager: ObservableObject {
         // Activity
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { readTypes.insert(steps) }
         if let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { readTypes.insert(activeEnergy) }
+        if let distance = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) { readTypes.insert(distance) }
+        if let exercise = HKObjectType.quantityType(forIdentifier: .appleExerciseTime) { readTypes.insert(exercise) }
+        if let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate) { readTypes.insert(heartRate) }
         if let vo2 = HKObjectType.quantityType(forIdentifier: .vo2Max) { readTypes.insert(vo2) }
+        // Additional activity metrics
+        if let basalEnergy = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned) { readTypes.insert(basalEnergy) }
+        if let distanceCycling = HKObjectType.quantityType(forIdentifier: .distanceCycling) { readTypes.insert(distanceCycling) }
+        if let distanceSwimming = HKObjectType.quantityType(forIdentifier: .distanceSwimming) { readTypes.insert(distanceSwimming) }
+        if let flights = HKObjectType.quantityType(forIdentifier: .flightsClimbed) { readTypes.insert(flights) }
+        if let standTime = HKObjectType.quantityType(forIdentifier: .appleStandTime) { readTypes.insert(standTime) }
+        // Health insights
+        if let mindful = HKObjectType.categoryType(forIdentifier: .mindfulSession) { readTypes.insert(mindful) }
+        if let dietaryEnergy = HKObjectType.quantityType(forIdentifier: .dietaryEnergyConsumed) { readTypes.insert(dietaryEnergy) }
+        if let water = HKObjectType.quantityType(forIdentifier: .dietaryWater) { readTypes.insert(water) }
+        if let carbs = HKObjectType.quantityType(forIdentifier: .dietaryCarbohydrates) { readTypes.insert(carbs) }
+        if let protein = HKObjectType.quantityType(forIdentifier: .dietaryProtein) { readTypes.insert(protein) }
+        if let fat = HKObjectType.quantityType(forIdentifier: .dietaryFatTotal) { readTypes.insert(fat) }
+        if let caffeine = HKObjectType.quantityType(forIdentifier: .dietaryCaffeine) { readTypes.insert(caffeine) }
+        if let sodium = HKObjectType.quantityType(forIdentifier: .dietarySodium) { readTypes.insert(sodium) }
+        if let glucose = HKObjectType.quantityType(forIdentifier: .bloodGlucose) { readTypes.insert(glucose) }
+        if let oxy = HKObjectType.quantityType(forIdentifier: .oxygenSaturation) { readTypes.insert(oxy) }
+        if let bodyTemp = HKObjectType.quantityType(forIdentifier: .bodyTemperature) { readTypes.insert(bodyTemp) }
+        if let sys = HKObjectType.quantityType(forIdentifier: .bloodPressureSystolic) { readTypes.insert(sys) }
+        if let dia = HKObjectType.quantityType(forIdentifier: .bloodPressureDiastolic) { readTypes.insert(dia) }
+        if let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass) { readTypes.insert(bodyMass) }
+        if let bmi = HKObjectType.quantityType(forIdentifier: .bodyMassIndex) { readTypes.insert(bmi) }
+        if let bodyFat = HKObjectType.quantityType(forIdentifier: .bodyFatPercentage) { readTypes.insert(bodyFat) }
+        // ECG & mobility
+        if #available(iOS 14.0, *) { readTypes.insert(HKObjectType.electrocardiogramType()) }
+        if let walkingSpeed = HKObjectType.quantityType(forIdentifier: .walkingSpeed) { readTypes.insert(walkingSpeed) }
+        if let stepLength = HKObjectType.quantityType(forIdentifier: .walkingStepLength) { readTypes.insert(stepLength) }
+        if let doubleSupport = HKObjectType.quantityType(forIdentifier: .walkingDoubleSupportPercentage) { readTypes.insert(doubleSupport) }
+        if let asymmetry = HKObjectType.quantityType(forIdentifier: .walkingAsymmetryPercentage) { readTypes.insert(asymmetry) }
+        if let steadiness = HKObjectType.quantityType(forIdentifier: .appleWalkingSteadiness) { readTypes.insert(steadiness) }
+        // Effort scores (iOS 18+)
+        if #available(iOS 18.0, *), let effort = HKObjectType.quantityType(forIdentifier: .workoutEffortScore) { readTypes.insert(effort) }
+        if #available(iOS 18.0, *), let estEffort = HKObjectType.quantityType(forIdentifier: .estimatedWorkoutEffortScore) { readTypes.insert(estEffort) }
+        // Workout routes
+        if #available(iOS 11.0, *) { readTypes.insert(HKSeriesType.workoutRoute()) }
         readTypes.insert(HKObjectType.workoutType())
 
         store.requestAuthorization(toShare: nil, read: readTypes) { success, _ in
@@ -146,6 +240,7 @@ final class HealthViewModel: ObservableObject {
     @Published var healthDataAvailable: Bool = false
 
     private let healthKitManager = HealthKitManager()
+    private let dataService = HealthDataService()
 
     init() {
         self.healthDataAvailable = healthKitManager.isHealthDataAvailable()
@@ -167,7 +262,7 @@ final class HealthViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        let report = Self.buildPlaceholderReport()
+        let report = await dataService.buildReport()
         StorageManager.shared.save(report: report)
         self.lastUpdated = report.meta.generatedAt
         if let cached = StorageManager.shared.loadPrettyJSON() {
@@ -197,23 +292,67 @@ final class HealthViewModel: ObservableObject {
             todayStart: todayStart
         )
 
-        let nullMetric = Metric(value: nil, unit: "", sampleCount: 0, quality: [])
         let readiness: [String: Metric] = [
             "hrv_sdnn_ms": Metric(value: nil, unit: "ms", sampleCount: 0, quality: []),
             "resting_hr_bpm": Metric(value: nil, unit: "bpm", sampleCount: 0, quality: []),
             "respiratory_rate_br_min": Metric(value: nil, unit: "br/min", sampleCount: 0, quality: []),
             "wrist_temp_delta_c": Metric(value: nil, unit: "°C", sampleCount: 0, quality: []),
-            "sleep_duration_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: [])
+            "sleep_duration_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: []),
+            "sleep_awake_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: []),
+            "sleep_core_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: []),
+            "sleep_deep_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: []),
+            "sleep_rem_min": Metric(value: nil, unit: "min", sampleCount: 0, quality: []),
+            "sleep_hr_avg_bpm": Metric(value: nil, unit: "bpm", sampleCount: 0, quality: []),
+            "oxygen_saturation_avg_pct": Metric(value: nil, unit: "%", sampleCount: 0, quality: [])
         ]
 
-        let activity = Activity(steps: nil, activeEnergyKcal: nil, workouts: [])
+        let emptyDay = ActivityDay(
+            steps: nil,
+            activeEnergyKcal: nil,
+            distanceWalkingRunningMeters: nil,
+            distanceCyclingMeters: nil,
+            distanceSwimmingMeters: nil,
+            flightsClimbed: nil,
+            basalEnergyKcal: nil,
+            standMinutes: nil,
+            standHours: nil,
+            avgHeartRateBpm: nil,
+            maxHeartRateBpm: nil,
+            vo2Max: nil,
+            exerciseMinutes: nil,
+            workouts: [],
+            heartRateBpm: nil,
+            hrZonesSec: nil
+        )
+        let activity = Activity(yesterday: emptyDay, today: emptyDay)
+        let emptyHealthDay = HealthDay(
+            mindfulMinutes: nil,
+            dietaryEnergyKcal: nil,
+            dietaryWaterLiters: nil,
+            dietaryCarbohydratesGrams: nil,
+            dietaryProteinGrams: nil,
+            dietaryFatGrams: nil,
+            dietaryCaffeineMg: nil,
+            dietarySodiumMg: nil,
+            dietaryAlcoholGrams: nil,
+            bloodGlucoseMgPerdL: nil,
+            bloodPressureSystolicMmHg: nil,
+            bloodPressureDiastolicMmHg: nil,
+            oxygenSaturationAvgPct: nil,
+            bodyTemperatureC: nil,
+            bodyMassKg: nil,
+            bodyMassIndex: nil,
+            bodyFatPercent: nil,
+            ecgCount: nil
+        )
+        let health = Health(yesterday: emptyHealthDay, today: emptyHealthDay)
 
         let flags: [String: Bool] = [
             "permissions_partial": false,
             "skeleton_data": true
         ]
 
-        return ReportV1(meta: meta, windows: windows, readinessSignals: readiness, activity: activity, flags: flags)
+        return ReportV1(meta: meta, windows: windows, readinessSignals: readiness, activity: activity, health: health, flags: flags)
     }
 
     private static func emptyPrettyJSON() -> String {
